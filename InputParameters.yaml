@@ -1,0 +1,58 @@
+Parameters:
+  NameOfService:
+    Description: "The name of the serice this stack is to be used for."
+    Type: String
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+  KeyName:
+    Description: Name of EC2 login key
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings: 
+  AMIRegionMap: 
+    us-east-1: 
+      "AMI": "ami-0e731c8a588258d0d"
+    us-east-2: 
+      "AMI": "ami-06aa3f7caf3a30282"
+    us-west-1: 
+      "AMI": "ami-0e731c8a588258d0d"
+    eu-west-1:
+      AMI: "ami-0766b4b472db7e3b9"
+
+Resources:
+  MyInstance: 
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap 
+        - AMIRegionMap
+        - !Ref AWS::Region
+        - AMI 
+      Tags: 
+        - Key: "Name"
+          Value: !Ref NameOfService
+      SecurityGroups:
+        - !Ref VprofileSG
+
+  VprofileSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh & http from MyIP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 68.43.30.11/32
